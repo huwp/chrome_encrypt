@@ -1,0 +1,137 @@
+<script src="md5.js" type="text/javascript"></script>
+<script src="base64.js" type="text/javascript"></script>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	</head>
+	<body>
+		<script type="text/javascript">
+			function doSomething(){
+				var text = document.getElementById('inputBox').value;
+
+				var md5code = hex_md5(text);
+				var md5code16 = md5code.substring(8,24);
+
+				//alert(text);
+				document.getElementById('outputBox32low').value = md5code;
+				document.getElementById('outputBox16low').value = md5code16;
+				document.getElementById('outputBox32up').value = md5code.toUpperCase();
+				document.getElementById('outputBox16up').value = md5code16.toUpperCase();
+				//alert(hex_md5(text));
+				document.getElementById('outputBase64Box').value = BASE64.encode(text);
+			}
+		</script>
+
+		<script type="text/javascript">
+
+			function strAnsi2Unicode(asContents)  //将Ansi编码的字符串，转换成Unicode编码的字符串
+			{
+					var len1=asContents.length;
+					var temp="";
+					var chrcode;
+					for(var i=0;i<len1;i++)
+					{
+							var varasc=asContents.charCodeAt(i);
+							if(varasc>127)
+							{
+									chrcode=AnsiToUnicode((varasc<<8)+asContents.charCodeAt(++i));
+							}
+							else
+							{
+									chrcode=varasc;
+							}
+							temp+=String.fromCharCode(chrcode);
+					}
+					return temp;
+			}
+
+			function strUnicode2Ansi(asContents) //将Unicode编码的字符串，转换成Ansi编码的字符串
+			{
+					var len1=asContents.length;
+					var temp="";
+					for(var i=0;i<len1;i++)
+					{
+							var varasc=asContents.charCodeAt(i);
+							if(varasc<0)
+									varasc+=65536;
+							if(varasc>127)
+									varasc=UnicodeToAnsi(varasc);
+							if(varasc>255)
+							{
+									var varlow=varasc & 65280;
+									varlow=varlow>>8;
+									var varhigh=varasc & 255;
+									temp+=String.fromCharCode(varlow)+String.fromCharCode(varhigh);
+							}
+							else
+							{
+									temp+=String.fromCharCode(varasc);
+							}
+					}
+					return temp;
+			}
+
+
+			function Decryption(){ //解密
+				var str = document.getElementById('downloadlinkURL').value.replace(/ +$|\/$/g,"").replace("Flashget://","flashget://");
+
+				if (str.search(/^thunder/i)!=-1) {
+					str=str.replace("thunder://","");
+					str=strAnsi2Unicode(BASE64.decode(str)).replace(/^AA|ZZ$/gi,"");
+					document.getElementById('OrginURL').value = str;
+				}
+				else if (str.search(/^flashget/i)!=-1) {
+					str=str.replace("flashget://","");
+					str=str.replace(/&.*$/,"");
+					str=strAnsi2Unicode(BASE64.decode(str)).replace(/^\[FLASHGET\]|\[FLASHGET\]$/gi,"");
+					document.getElementById('OrginURL').value = str;
+				}	else if (str.search(/^qqdl/i)!=-1) {
+					str=str.replace("qqdl://","");
+					str=strAnsi2Unicode(BASE64.decode(str));
+					document.getElementById('OrginURL').value = str;
+				}
+				else alert("无法解密所输入的URL");
+
+			}
+
+			function Encryption() { //加密
+				var str=document.getElementById('downloadlinkURL').value.replace(/ +$/g,"");
+				
+				//alert(str);
+
+				if (str.search(/^thunder|^flashget/i)==-1) {
+					var thunder="AA"+str+"ZZ";
+					thunder="thunder://"+BASE64.encode(strUnicode2Ansi(thunder));
+					var flashget="[FLASHGET]"+str+"[FLASHGET]";
+					flashget="flashget://"+BASE64.encode(strUnicode2Ansi(flashget))+"&abc";
+					var xuanfeng="qqdl://"+BASE64.encode(strUnicode2Ansi(str));
+					
+					document.getElementById('THUNDERURL').value = thunder;
+					document.getElementById('FLASHGETURL').value = flashget;
+					document.getElementById('QQURL').value = xuanfeng;
+				}
+
+			}
+		</script>
+
+
+		<form id = "myForm">
+			明文：<input type = "text" id = "inputBox" size = "100"><br/>
+			 MD5 小写32位：<input type = "text" id = "outputBox32low"  size = "100" readonly="true"><br/>
+			 MD5 小写16位：<input type = "text" id = "outputBox16low"  size = "100" readonly="true"><br/>
+			 MD5 大写32位：<input type = "text" id = "outputBox32up"  size = "100" readonly="true"><br/>
+			 MD5 大写16位：<input type = "text" id = "outputBox16up"  size = "100" readonly="true"><br/>
+			 BASE64:<input type = "text" id = "outputBase64Box"  size = "100" readonly="true"><br/>
+			<input type = "button" value = "加密" onclick = "doSomething()">
+		</form>
+		<form id = "downloadlink">
+			URL地址：<input type = "text" id = "downloadlinkURL" size = "100"><br/>
+			原地址<input type = "text" id = "OrginURL"  size = "100" readonly="true"><br/>
+			迅雷地址<input type = "text" id = "THUNDERURL"  size = "100" readonly="true"><br/>
+			快车地址<input type = "text" id = "FLASHGETURL"  size = "100" readonly="true"><br/>
+			QQ旋风地址<input type = "text" id = "QQURL"  size = "100" readonly="true"><br/>
+			<input type = "button" value = "地址加密" onclick = "Encryption()"><br/>
+			<input type = "button" value = "地址解密" onclick = "Decryption()">
+		</form>
+	</body>
+</html>
